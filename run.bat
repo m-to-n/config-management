@@ -1,0 +1,1 @@
+dapr run --log-level debug --app-id config-maangement --app-protocol http --app-port 6003 --components-path ./dapr-components go run main.go
