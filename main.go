@@ -1,24 +1,12 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	daprc "github.com/dapr/go-sdk/client"
+	"github.com/m-to-n/config-management/tenant"
 )
 
 func main() {
-	client, err := daprc.NewClient()
-	if err != nil {
-		panic("no good!")
-	}
-	defer client.Close()
-
-	ctx := context.Background()
-	data := []byte("hello")
-	store := "statestore-mongodb" // defined in the component YAML
-
-	// save state with the key key1, default options: strong, last-write
-	if err := client.SaveState(ctx, store, "key1", data); err != nil {
+	if err := tenant.CreateDummyTenant(); err != nil {
 		panic(err)
 	}
 
