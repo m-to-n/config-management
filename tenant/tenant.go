@@ -15,8 +15,13 @@ import (
 	"sync"
 )
 
-// https://www.isolineltd.com/blog/2020/implementing-custom-dapr-state.html
-// https://golangtutorial.dev/tips/http-post-json-go/
+/**
+some useful links:
+	https://www.isolineltd.com/blog/2020/implementing-custom-dapr-state.html
+	https://golangtutorial.dev/tips/http-post-json-go/
+	https://docs.dapr.io/developing-applications/building-blocks/state-management/howto-state-query-api/
+*/
+
 const MONGODB_STATE_STORE_TENANTS = "statestore-mongodb"
 
 var (
@@ -24,7 +29,6 @@ var (
 	MONGODB_STATE_STORE_TENANTS_URL string
 )
 
-// see sample state data here: https://docs.dapr.io/developing-applications/building-blocks/state-management/howto-state-query-api/
 type DaprStateWrapper struct {
 	Key   string               `json:"key"`
 	Value tenants.TenantConfig `json:"value"`
@@ -62,12 +66,63 @@ func saveState(state []byte) error {
 	return nil
 }
 
+func SaveTenantConfig(tenantConfig tenants.TenantConfig) error {
+	client := dapr.DaprClient()
+	if client == nil {
+		return errors.New("unable to get DaprClient")
+	}
+
+	daprState := DaprStateWrapper{
+		Key:   tenantConfig.TenantId,
+		Value: tenantConfig,
+	}
+
+	var daprStates []DaprStateWrapper
+	daprStates = append(daprStates, daprState)
+
+	data, err := json.Marshal(daprStates)
+	if err != nil {
+		return err
+	}
+
+	if err := saveState(data); err != nil {
+		fmt.Printf("error when saving to %s client %s", MONGODB_STATE_STORE_TENANTS, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func GetTenantConfig(tenantId string) (*tenants.TenantConfig, error) {
+	client := dapr.DaprClient()
+	if client == nil {
+		return nil, errors.New("unable to get DaprClient")
+	}
+
+	ctx := context.Background()
+
+	stateItem, err := client.GetState(ctx, MONGODB_STATE_STORE_TENANTS, tenantId)
+	if err != nil {
+		return nil, err
+	}
+
+	var tenantConfig tenants.TenantConfig
+	if err := json.Unmarshal(stateItem.Value, &tenantConfig); err != nil {
+		return nil, err
+	}
+
+	return &tenantConfig, nil
+}
+
+// this functions just serves for quick testing of saving state
+// via DAPR SDK API (which always serializes struct into json string in mongodb)
+// and HTTP API (which works better and can serialize state value s nested json object in mongodb)
 func CreateDummyTenant() error {
 	client := dapr.DaprClient()
 	if client == nil {
 		return errors.New("unable to get DaprClient")
 	}
-	defer client.Close()
+	defer client.Close() // we should not close! dapr.DaprClient() runs only once|!
 
 	ctx := context.Background()
 
@@ -84,7 +139,7 @@ func CreateDummyTenant() error {
 
 	tenantConfig.Channels = append(tenantConfig.Channels, tenantChannelConfig)
 
-	if 1 == 11 {
+	if 1 == 2 /* never go this way :) */ {
 		// saving state via SDK, not sure how to save struct as json (will be stringified internally)
 		data, err := json.Marshal(tenantConfig)
 		if err != nil {
@@ -98,22 +153,7 @@ func CreateDummyTenant() error {
 		}
 	} else {
 		// saving state "manually" via HTTP API
-		daprState := DaprStateWrapper{
-			Key:   tenantConfig.TenantId,
-			Value: tenantConfig,
-		}
-
-		var daprStates []DaprStateWrapper
-		daprStates = append(daprStates, daprState)
-
-		data, err := json.Marshal(daprStates)
-		if err != nil {
-			fmt.Printf("error when marshaling daprState: %s", err.Error())
-			return err
-		}
-		fmt.Printf("serialized daprStates: %s", string(data))
-
-		if err := saveState(data); err != nil {
+		if err := SaveTenantConfig(tenantConfig); err != nil {
 			fmt.Printf("error when saving to %s client %s", MONGODB_STATE_STORE_TENANTS, err.Error())
 			return err
 		}

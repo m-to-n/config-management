@@ -6,9 +6,18 @@ import (
 )
 
 func main() {
-	if err := tenant.CreateDummyTenant(); err != nil {
+	/* if err := tenant.CreateDummyTenant(); err != nil {
+		panic(err)
+	} */
+
+	tcp, err := tenant.GetTenantConfig("tenant-123")
+	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("state stored!!!")
+	tenantConfig := *tcp
+
+	fmt.Println("I am done here %s", tenantConfig)
+
+	fmt.Println("I am done here!!!")
 }
