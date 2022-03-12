@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/m-to-n/common/channels"
 	"github.com/m-to-n/common/tenants"
 	"github.com/m-to-n/config-management/dapr"
+	"github.com/m-to-n/config-management/utils"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,7 +33,7 @@ type DaprStateWrapper struct {
 	Value tenants.TenantConfig `json:"value"`
 }
 
-func saveState(state []byte) error {
+func saveStateHttpApi(state []byte) error {
 	client := &http.Client{}
 
 	once.Do(func() {
@@ -67,11 +66,6 @@ func saveState(state []byte) error {
 }
 
 func SaveTenantConfig(tenantConfig tenants.TenantConfig) error {
-	client := dapr.DaprClient()
-	if client == nil {
-		return errors.New("unable to get DaprClient")
-	}
-
 	daprState := DaprStateWrapper{
 		Key:   tenantConfig.TenantId,
 		Value: tenantConfig,
@@ -85,7 +79,7 @@ func SaveTenantConfig(tenantConfig tenants.TenantConfig) error {
 		return err
 	}
 
-	if err := saveState(data); err != nil {
+	if err := saveStateHttpApi(data); err != nil {
 		fmt.Printf("error when saving to %s client %s", MONGODB_STATE_STORE_TENANTS, err.Error())
 		return err
 	}
@@ -95,10 +89,6 @@ func SaveTenantConfig(tenantConfig tenants.TenantConfig) error {
 
 func GetTenantConfig(tenantId string) (*tenants.TenantConfig, error) {
 	client := dapr.DaprClient()
-	if client == nil {
-		return nil, errors.New("unable to get DaprClient")
-	}
-
 	ctx := context.Background()
 
 	stateItem, err := client.GetState(ctx, MONGODB_STATE_STORE_TENANTS, tenantId)
@@ -119,25 +109,9 @@ func GetTenantConfig(tenantId string) (*tenants.TenantConfig, error) {
 // and HTTP API (which works better and can serialize state value s nested json object in mongodb)
 func CreateDummyTenant() error {
 	client := dapr.DaprClient()
-	if client == nil {
-		return errors.New("unable to get DaprClient")
-	}
-	defer client.Close() // we should not close! dapr.DaprClient() runs only once|!
-
 	ctx := context.Background()
 
-	tenantConfig := tenants.TenantConfig{
-		TenantId: "tenant-123",
-		Name:     "dummyTenant",
-		Desc:     "dummy tenant for development & testing",
-		Channels: make([]tenants.TenantChannelConfig, 0),
-	}
-
-	tenantChannelConfig := tenants.TenantChannelConfig{
-		Channel: channels.CHANNELS_WHATSAPP,
-	}
-
-	tenantConfig.Channels = append(tenantConfig.Channels, tenantChannelConfig)
+	tenantConfig := utils.GetDummyTenant()
 
 	if 1 == 2 /* never go this way :) */ {
 		// saving state via SDK, not sure how to save struct as json (will be stringified internally)

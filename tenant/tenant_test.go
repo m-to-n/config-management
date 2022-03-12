@@ -3,8 +3,7 @@ package tenant
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/m-to-n/common/channels"
-	"github.com/m-to-n/common/tenants"
+	"github.com/m-to-n/config-management/utils"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
@@ -13,18 +12,7 @@ import (
 func TestDaprStateSerialization(t *testing.T) {
 	t.Parallel()
 
-	tenantConfig := tenants.TenantConfig{
-		TenantId: "tenant-123",
-		Name:     "dummyTenant",
-		Desc:     "dummy tenant for development & testing",
-		Channels: make([]tenants.TenantChannelConfig, 0),
-	}
-
-	tenantChannelConfig := tenants.TenantChannelConfig{
-		Channel: channels.CHANNELS_WHATSAPP,
-	}
-
-	tenantConfig.Channels = append(tenantConfig.Channels, tenantChannelConfig)
+	tenantConfig := utils.GetDummyTenant()
 
 	daprState := DaprStateWrapper{
 		Key:   tenantConfig.TenantId,

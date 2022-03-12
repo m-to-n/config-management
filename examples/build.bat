@@ -1,0 +1,1 @@
+go build -o bin/getTenantConfig.exe getTenantConfig/main.go
