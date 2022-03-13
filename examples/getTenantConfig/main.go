@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	dapr "github.com/dapr/go-sdk/client"
+	"github.com/m-to-n/common/logging"
+	"github.com/m-to-n/common/tenants"
 	"log"
 )
 
@@ -23,4 +26,12 @@ func main() {
 	log.Println("Tenant config requested: " + tenantId)
 	log.Println("Result: ")
 	log.Println(result)
+
+	var tenant tenants.TenantConfig
+	err = json.Unmarshal(result, &tenant)
+	if err != nil {
+		log.Fatalf("tenant unamrshaling error: %s ", err.Error())
+	}
+	structStrPtr, _ := logging.StructToPrettyString(tenant)
+	log.Println(*structStrPtr)
 }
