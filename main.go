@@ -2,19 +2,18 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/dapr/go-sdk/service/common"
-	common_tenants "github.com/m-to-n/common/tenants"
 	"github.com/m-to-n/config-management/dapr"
 	"github.com/m-to-n/config-management/tenant"
-	"github.com/m-to-n/config-management/utils"
 	"log"
 )
 
 func testingStuff() {
-	/* if err := tenant.CreateDummyTenant(); err != nil {
+	/*if err := tenant.CreateDummyTenant(); err != nil {
 		panic(err)
-	} */
+	}  */
 
 	tcp, err := tenant.GetTenantConfig("tenant-123")
 	if err != nil {
@@ -25,19 +24,35 @@ func testingStuff() {
 
 	fmt.Println("I am done here %s", tenantConfig)
 
-	fmt.Println("I am done here!!!")
+	fmt.Println("I am done here!!!") /**/
+}
+
+type getTenantConfigReqData struct {
+	TenantId string `json:"tenantId"`
 }
 
 // curl http://localhost:3500/v1.0/invoke/config-management/method/getTenantConfig/tenant-123
-func getTenantConfigHandler(ctx context.Context, in *common.InvocationEvent) (out *common.Content, err error) {
+func getTenantConfigHandler(ctx context.Context, in *common.InvocationEvent) (out *common.Content, errO error) {
 	log.Printf("getTenantConfigHandler - ContentType:%s, Verb:%s, QueryString:%s, %+v", in.ContentType, in.Verb, in.QueryString, string(in.Data))
 	// do something with the invocation here
 
-	dummyTenantData, _ := common_tenants.TenantConfigToJson(utils.GetDummyTenant())
+	// dummyTenantData, _ := common_tenants.TenantConfigToJson(utils.GetDummyTenant())
+
+	var reqData getTenantConfigReqData
+	err := json.Unmarshal(in.Data, &reqData)
+	if err != nil {
+		log.Printf("error when parsing request: %s", err.Error())
+		return nil, err
+	}
+
+	log.Println("calling GetTenantConfig for: " + reqData.TenantId)
+	dbTenantData, _ := tenant.GetTenantConfig(reqData.TenantId)
+	dbTenantDataBytes, _ := json.Marshal(*dbTenantData)
 
 	out = &common.Content{
 		// Data:        in.Data,
-		Data:        dummyTenantData,
+		// Data: dummyTenantData,
+		Data:        dbTenantDataBytes,
 		ContentType: in.ContentType,
 		DataTypeURL: in.DataTypeURL,
 	}
@@ -46,6 +61,7 @@ func getTenantConfigHandler(ctx context.Context, in *common.InvocationEvent) (ou
 }
 
 func main() {
+	// testingStuff()
 	s := dapr.DaprService()
 
 	if err := s.AddServiceInvocationHandler("getTenantConfig", getTenantConfigHandler); err != nil {
@@ -54,5 +70,5 @@ func main() {
 
 	if err := s.Start(); err != nil {
 		log.Fatalf("dapr server error: %v", err)
-	}
+	} /**/
 }

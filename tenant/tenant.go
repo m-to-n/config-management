@@ -91,6 +91,7 @@ func GetTenantConfig(tenantId string) (*tenants.TenantConfig, error) {
 	client := dapr.DaprClient()
 	ctx := context.Background()
 
+	fmt.Printf("getting state store: %s  state key: %s", MONGODB_STATE_STORE_TENANTS, tenantId)
 	stateItem, err := client.GetState(ctx, MONGODB_STATE_STORE_TENANTS, tenantId)
 	if err != nil {
 		return nil, err

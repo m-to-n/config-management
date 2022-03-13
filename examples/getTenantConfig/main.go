@@ -21,8 +21,13 @@ func main() {
 	}
 	defer client.Close()
 	ctx := context.Background()
-	//Using Dapr SDK to invoke a method
-	result, err := client.InvokeMethod(ctx, "config-management", "getTenantConfig", "get")
+
+	content := &dapr.DataContent{
+		ContentType: "application/json",
+		Data:        []byte(`{ "tenantId": "tenant-123" }`),
+	}
+
+	result, err := client.InvokeMethodWithContent(ctx, "config-management", "getTenantConfig", "get", content)
 	log.Println("Tenant config requested: " + tenantId)
 	log.Println("Result: ")
 	log.Println(result)
