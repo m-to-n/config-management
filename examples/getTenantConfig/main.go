@@ -12,7 +12,7 @@ https://github.com/dapr/go-sdk/tree/main/examples
 
 func main() {
 	tenantId := "tenant-123"
-	client, err := dapr.NewClientWithPort("35001")
+	client, err := dapr.NewClient()
 	if err != nil {
 		panic(err)
 	}

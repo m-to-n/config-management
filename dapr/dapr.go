@@ -14,9 +14,14 @@ var (
 	instance_d daprcommon.Service
 )
 
+// dapr sidecar http port
 const DAPR_HTTP_PORT = "3500"
+
+// dapr sidecar grp port
 const DAPR_GRPC_PORT = "35000"
-const DAPRD_GRPC_PORT = ":35001"
+
+// dapr app grpc address
+const DAPR_APP_GRPC_ADDR = ":35001"
 
 func DaprClient() daprc.Client {
 	once.Do(func() {
@@ -35,7 +40,7 @@ func DaprClient() daprc.Client {
 func DaprService() daprcommon.Service {
 	once.Do(func() {
 
-		s, err := daprd.NewService(DAPRD_GRPC_PORT)
+		s, err := daprd.NewService(DAPR_APP_GRPC_ADDR)
 		if err != nil {
 			log.Fatalf("failed to start dapr server: %v", err)
 		}

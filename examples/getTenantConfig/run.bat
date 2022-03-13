@@ -1,0 +1,1 @@
+dapr run --app-id callerGetTenantConfig --log-level debug go run main.go
