@@ -15,7 +15,8 @@ func testingStuff() {
 		panic(err)
 	}  */
 
-	tcp, err := tenant.GetTenantConfig("tenant-123")
+	ctx := context.Background()
+	tcp, err := tenant.GetTenantConfig(ctx, "tenant-123")
 	if err != nil {
 		panic(err)
 	}
@@ -36,6 +37,7 @@ func getTenantConfigHandler(ctx context.Context, in *common.InvocationEvent) (ou
 	log.Printf("getTenantConfigHandler - ContentType:%s, Verb:%s, QueryString:%s, %+v", in.ContentType, in.Verb, in.QueryString, string(in.Data))
 	// do something with the invocation here
 
+	// using dummyTenantData requires import: common_tenants "github.com/m-to-n/common/tenants"
 	// dummyTenantData, _ := common_tenants.TenantConfigToJson(utils.GetDummyTenant())
 
 	var reqData getTenantConfigReqData
@@ -45,8 +47,8 @@ func getTenantConfigHandler(ctx context.Context, in *common.InvocationEvent) (ou
 		return nil, err
 	}
 
-	log.Println("calling GetTenantConfig for: " + reqData.TenantId)
-	dbTenantData, _ := tenant.GetTenantConfig(reqData.TenantId)
+	log.Println("Calling GetTenantConfig for: " + reqData.TenantId)
+	dbTenantData, _ := tenant.GetTenantConfig(ctx, reqData.TenantId)
 	dbTenantDataBytes, _ := json.Marshal(*dbTenantData)
 
 	out = &common.Content{
