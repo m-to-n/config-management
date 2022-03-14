@@ -5,6 +5,7 @@ import (
 	daprcommon "github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
 	"log"
+	"os"
 	"sync"
 )
 
@@ -23,7 +24,7 @@ const DAPR_GRPC_PORT = "35000"
 // dapr app grpc address
 const DAPR_APP_GRPC_ADDR = ":35001"
 
-func DaprClient() daprc.Client {
+func DaprClientNotWorking() daprc.Client {
 	once.Do(func() {
 		client, err := daprc.NewClientWithPort(DAPR_GRPC_PORT)
 
@@ -35,6 +36,20 @@ func DaprClient() daprc.Client {
 		instance_c = client
 	})
 	return instance_c
+}
+
+func DaprClient() daprc.Client {
+
+	// set DAPR_GRPC_PORT otherwise NewClient will try to init on default grpc port (50001)
+	// while our sidecar runs on DAPR_GRPC_PORT!
+	os.Setenv("DAPR_GRPC_PORT", DAPR_GRPC_PORT)
+	client, err := daprc.NewClient() // NewClient uses internally doOnce.Do to prevent double init of grpc connection!
+
+	if err != nil {
+		log.Fatalf("failed to start dapr client: %v", err)
+	}
+
+	return client
 }
 
 func DaprService() daprcommon.Service {

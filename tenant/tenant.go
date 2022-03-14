@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/dapr/go-sdk/client"
 	"github.com/m-to-n/common/tenants"
 	"github.com/m-to-n/config-management/dapr"
 	"github.com/m-to-n/config-management/utils"
@@ -89,16 +88,10 @@ func SaveTenantConfig(tenantConfig tenants.TenantConfig) error {
 }
 
 func GetTenantConfig(ctx context.Context, tenantId string) (*tenants.TenantConfig, error) {
-	// TODO - this does not work for some reason. client must be created directly here! to be further analyzed!
-	// client := dapr.DaprClient()
-	client2, err := client.NewClientWithPort(dapr.DAPR_GRPC_PORT)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer client2.Close()
+	client := dapr.DaprClient()
 
 	fmt.Printf("getting state store: %s  state key: %s", MONGODB_STATE_STORE_TENANTS, tenantId)
-	stateItem, err := client2.GetState(ctx, MONGODB_STATE_STORE_TENANTS, tenantId)
+	stateItem, err := client.GetState(ctx, MONGODB_STATE_STORE_TENANTS, tenantId)
 	if err != nil {
 		return nil, err
 	}
