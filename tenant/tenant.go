@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	common_dapr "github.com/m-to-n/common/dapr"
 	"github.com/m-to-n/common/tenants"
 	"github.com/m-to-n/config-management/dapr"
 	"github.com/m-to-n/config-management/utils"
@@ -88,7 +89,7 @@ func SaveTenantConfig(tenantConfig tenants.TenantConfig) error {
 }
 
 func GetTenantConfig(ctx context.Context, tenantId string) (*tenants.TenantConfig, error) {
-	client := dapr.DaprClient()
+	client := common_dapr.DaprClient(dapr.DAPR_GRPC_PORT)
 
 	fmt.Printf("getting state store: %s  state key: %s", MONGODB_STATE_STORE_TENANTS, tenantId)
 	stateItem, err := client.GetState(ctx, MONGODB_STATE_STORE_TENANTS, tenantId)
@@ -108,7 +109,7 @@ func GetTenantConfig(ctx context.Context, tenantId string) (*tenants.TenantConfi
 // via DAPR SDK API (which always serializes struct into json string in mongodb)
 // and HTTP API (which works better and can serialize state value s nested json object in mongodb)
 func CreateDummyTenant() error {
-	client := dapr.DaprClient()
+	client := common_dapr.DaprClient(dapr.DAPR_GRPC_PORT)
 	ctx := context.Background()
 
 	tenantConfig := utils.GetDummyTenant()

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dapr/go-sdk/service/common"
+	common_dapr "github.com/m-to-n/common/dapr"
 	"github.com/m-to-n/config-management/dapr"
 	"github.com/m-to-n/config-management/tenant"
 	"log"
@@ -64,7 +65,7 @@ func getTenantConfigHandler(ctx context.Context, in *common.InvocationEvent) (ou
 
 func main() {
 	// testingStuff()
-	s := dapr.DaprService()
+	s := common_dapr.DaprService(dapr.DAPR_APP_GRPC_ADDR)
 
 	if err := s.AddServiceInvocationHandler("getTenantConfig", getTenantConfigHandler); err != nil {
 		log.Fatalf("error adding invocation handler: %v", err)
