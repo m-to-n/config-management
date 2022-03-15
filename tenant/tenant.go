@@ -66,7 +66,7 @@ func saveStateHttpApi(state []byte) error {
 	return nil
 }
 
-func SaveTenantConfig(tenantConfig tenants.TenantConfig) error {
+func SaveTenantConfig(ctx context.Context, tenantConfig tenants.TenantConfig) error {
 	daprState := DaprStateWrapper{
 		Key:   tenantConfig.TenantId,
 		Value: tenantConfig,
@@ -128,7 +128,7 @@ func CreateDummyTenant() error {
 		}
 	} else {
 		// saving state "manually" via HTTP API
-		if err := SaveTenantConfig(tenantConfig); err != nil {
+		if err := SaveTenantConfig(ctx, tenantConfig); err != nil {
 			fmt.Printf("error when saving to %s client %s", MONGODB_STATE_STORE_TENANTS, err.Error())
 			return err
 		}

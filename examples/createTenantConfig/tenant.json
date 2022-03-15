@@ -1,0 +1,17 @@
+{
+	"tenantId": "tenant-456",
+	"name": "dummyTenant456",
+	"desc": "dummy tenant for dev",
+	"channels": [{
+		"channel": "whatsapp",
+		"data": {
+			"whatsapp": {
+				"accountSid": "ACC123",
+				"numbers": [{
+					"phoneNumber": "+420123456789",
+					"language": "en"
+				}]
+			}
+		}
+	}]
+}
