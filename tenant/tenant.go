@@ -66,6 +66,62 @@ func saveStateHttpApi(state []byte) error {
 	return nil
 }
 
+func GetTenantByAccIdAndPhoneNum(ctx context.Context, tenantReq *tenants.TenantConfigByTwilioAccIDAndReceiverNumReq) (*tenants.TenantConfig, error) {
+	client := &http.Client{}
+
+	once.Do(func() {
+		MONGODB_STATE_STORE_TENANTS_URL = fmt.Sprintf("http://localhost:%s/v1.0-alpha1/state/%s", dapr.DAPR_HTTP_PORT, MONGODB_STATE_STORE_TENANTS)
+	})
+
+	daprQuery := fmt.Sprintf(`
+		{
+			"filter": {
+				"AND": [
+					{
+						"EQ": { "value.channels.data.whatsapp.accountSid": "%s" }
+					},
+					{
+						"EQ": { "value.channels.data.whatsapp.authToken": "%s" }
+					}
+				]
+			},
+			"page": {
+				"limit": 1
+			}
+		}
+	`, tenantReq.AccountSid, tenantReq.ReceiverPhoneNumber)
+
+	req, err := http.NewRequest("POST", MONGODB_STATE_STORE_TENANTS_URL, bytes.NewBuffer([]byte(daprQuery)))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	responseData, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	responseString := string(responseData)
+
+	fmt.Printf("http response: %s Body: %s", resp.Status, responseString)
+
+	var tenantConfig tenants.TenantConfig
+	if err := json.Unmarshal(responseData, &tenantConfig); err != nil {
+		return nil, err
+	}
+
+	return &tenantConfig, nil
+
+}
+
 func SaveTenantConfig(ctx context.Context, tenantConfig tenants.TenantConfig) error {
 	daprState := DaprStateWrapper{
 		Key:   tenantConfig.TenantId,

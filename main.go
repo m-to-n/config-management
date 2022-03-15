@@ -63,6 +63,32 @@ func getTenantConfigHandler(ctx context.Context, in *common.InvocationEvent) (ou
 	return
 }
 
+func getTenantConfigForTwilioWAHandler(ctx context.Context, in *common.InvocationEvent) (out *common.Content, errO error) {
+	log.Printf("getTenantConfigForTwilioWAHandler - ContentType:%s, Verb:%s, QueryString:%s, %+v", in.ContentType, in.Verb, in.QueryString, string(in.Data))
+
+	// using dummyTenantData requires import: common_tenants "github.com/m-to-n/common/tenants"
+	// dummyTenantData, _ := common_tenants.TenantConfigToJson(utils.GetDummyTenant())
+
+	var reqData common_tenants.TenantConfigByTwilioAccIDAndReceiverNumReq
+	err := json.Unmarshal(in.Data, &reqData)
+	if err != nil {
+		log.Printf("error when parsing request: %s", err.Error())
+		return nil, err
+	}
+
+	log.Printf("Calling getTenantConfigForTwilioWAHandler. accid: %s receiver phonum: %s ", reqData.AccountSid, reqData.ReceiverPhoneNumber)
+	dbTenantData, _ := tenant.GetTenantByAccIdAndPhoneNum(ctx, &reqData)
+	dbTenantDataBytes, _ := json.Marshal(*dbTenantData)
+
+	out = &common.Content{
+		Data:        dbTenantDataBytes,
+		ContentType: in.ContentType,
+		DataTypeURL: in.DataTypeURL,
+	}
+
+	return
+}
+
 func createTenantConfigHandler(ctx context.Context, in *common.InvocationEvent) (out *common.Content, errO error) {
 	log.Printf("createTenantConfigHandler - ContentType:%s, Verb:%s, QueryString:%s, %+v", in.ContentType, in.Verb, in.QueryString, string(in.Data))
 
@@ -93,11 +119,15 @@ func main() {
 	s := common_dapr.DaprService(dapr.DAPR_APP_GRPC_ADDR)
 
 	if err := s.AddServiceInvocationHandler("getTenantConfig", getTenantConfigHandler); err != nil {
-		log.Fatalf("error adding invocation handler: %v", err)
+		log.Fatalf("error adding invocation handler 1: %v", err)
+	}
+
+	if err := s.AddServiceInvocationHandler("getTenantConfigForTwilioWAReq", getTenantConfigForTwilioWAHandler); err != nil {
+		log.Fatalf("error adding invocation handler 2: %v", err)
 	}
 
 	if err := s.AddServiceInvocationHandler("createTenantConfig", createTenantConfigHandler); err != nil {
-		log.Fatalf("error adding invocation handler: %v", err)
+		log.Fatalf("error adding invocation handler 3: %v", err)
 	}
 
 	if err := s.Start(); err != nil {
