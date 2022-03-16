@@ -25,8 +25,9 @@ some useful links:
 const MONGODB_STATE_STORE_TENANTS = "statestore-mongodb"
 
 var (
-	once                            sync.Once
-	MONGODB_STATE_STORE_TENANTS_URL string
+	once                                  sync.Once
+	MONGODB_STATE_STORE_TENANTS_URL       string
+	MONGODB_STATE_STORE_TENANTS_URL_ALPHA string
 )
 
 type DaprStateWrapper struct {
@@ -70,7 +71,7 @@ func GetTenantByAccIdAndPhoneNum(ctx context.Context, tenantReq *tenants.TenantC
 	client := &http.Client{}
 
 	once.Do(func() {
-		MONGODB_STATE_STORE_TENANTS_URL = fmt.Sprintf("http://localhost:%s/v1.0-alpha1/state/%s", dapr.DAPR_HTTP_PORT, MONGODB_STATE_STORE_TENANTS)
+		MONGODB_STATE_STORE_TENANTS_URL_ALPHA = fmt.Sprintf("http://localhost:%s/v1.0-alpha1/state/%s/query", dapr.DAPR_HTTP_PORT, MONGODB_STATE_STORE_TENANTS)
 	})
 
 	daprQuery := fmt.Sprintf(`
@@ -91,12 +92,13 @@ func GetTenantByAccIdAndPhoneNum(ctx context.Context, tenantReq *tenants.TenantC
 		}
 	`, tenantReq.AccountSid, tenantReq.ReceiverPhoneNumber)
 
-	req, err := http.NewRequest("POST", MONGODB_STATE_STORE_TENANTS_URL, bytes.NewBuffer([]byte(daprQuery)))
+	req, err := http.NewRequest("POST", MONGODB_STATE_STORE_TENANTS_URL_ALPHA, bytes.NewBuffer([]byte(daprQuery)))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("dapr-app-id", "config-management")
 
 	resp, err := client.Do(req)
 
@@ -109,9 +111,55 @@ func GetTenantByAccIdAndPhoneNum(ctx context.Context, tenantReq *tenants.TenantC
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	responseString := string(responseData)
 
+	/**
+	will return 204 if no data found, 200 otherwise with payload like this:
+
+		{
+			"results": [
+				{
+					"key": "tenant-456",
+					"data": {
+						"tenantId": "tenant-456",
+						"name": "dummyTenant456",
+						"desc": "dummy tenant for dev",
+						"channels": [
+							{
+								"data": {
+									"whatsapp": {
+										"accountSid": "AC4...",
+										"authToken": "b34...",
+										"numbers": [
+											{
+												"phoneNumber": "+420123456789",
+												"language": "en"
+											}
+										]
+									}
+								},
+								"channel": "whatsapp"
+							}
+						]
+					},
+					"etag": "66d260bf-bc1f-4f3e-bfb0-48f2dd3e14d7"
+				}
+			],
+			"token": "1"
+		}
+	*/
+
 	fmt.Printf("http response: %s Body: %s", resp.Status, responseString)
+
+	if resp.StatusCode != 200 {
+		log.Printf("Error http status code received: %s", resp.StatusCode)
+	}
+
+	if resp.StatusCode == 204 {
+		log.Printf("No tenant config found: %s", resp.StatusCode)
+		return nil, nil
+	}
 
 	var tenantConfig tenants.TenantConfig
 	if err := json.Unmarshal(responseData, &tenantConfig); err != nil {
