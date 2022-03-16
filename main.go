@@ -77,8 +77,14 @@ func getTenantConfigForTwilioWAHandler(ctx context.Context, in *common.Invocatio
 	}
 
 	log.Printf("Calling getTenantConfigForTwilioWAHandler. accid: %s receiver phonum: %s ", reqData.AccountSid, reqData.ReceiverPhoneNumber)
-	dbTenantData, _ := tenant.GetTenantByAccIdAndPhoneNum(ctx, &reqData)
-	dbTenantDataBytes, _ := json.Marshal(*dbTenantData)
+	dbTenantData, err := tenant.GetTenantByAccIdAndPhoneNum(ctx, &reqData)
+	var dbTenantDataBytes []byte
+	if dbTenantData == nil || err != nil {
+		dbTenantDataBytes = []byte(`no_tenant_found`)
+	} else {
+		dbTenantDataBytes, _ = json.Marshal(*dbTenantData)
+		// TODO - handle errors properly here ;)
+	}
 
 	out = &common.Content{
 		Data:        dbTenantDataBytes,

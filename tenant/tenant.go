@@ -83,7 +83,7 @@ func GetTenantByAccIdAndPhoneNum(ctx context.Context, tenantReq *tenants.TenantC
 						"EQ": { "value.channels.data.whatsapp.accountSid": "%s" }
 					},
 					{
-						"EQ": { "value.channels.data.whatsapp.authToken": "%s" }
+						"EQ": { "value.channels.data.whatsapp.numbers.phoneNumber": "%s" }
 					}
 				]
 			},
@@ -99,7 +99,7 @@ func GetTenantByAccIdAndPhoneNum(ctx context.Context, tenantReq *tenants.TenantC
 	}
 
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("dapr-app-id", "config-management")
+	req.Header.Add("dapr-app-id", "config-management") // is this needed?
 
 	resp, err := client.Do(req)
 

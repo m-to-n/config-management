@@ -9,7 +9,7 @@
 				"accountSid": "ACC123",
 				"authToken": "bexxxx",
 				"numbers": [{
-					"phoneNumber": "+420123456789",
+					"phoneNumber": "whatsapp:+14155238886",
 					"language": "en"
 				}]
 			}
