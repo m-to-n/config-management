@@ -128,7 +128,7 @@ func main() {
 		log.Fatalf("error adding invocation handler 1: %v", err)
 	}
 
-	if err := s.AddServiceInvocationHandler("getTenantConfigForTwilioWAReq", getTenantConfigForTwilioWAHandler); err != nil {
+	if err := s.AddServiceInvocationHandler("getTenantConfigForTwilioWA", getTenantConfigForTwilioWAHandler); err != nil {
 		log.Fatalf("error adding invocation handler 2: %v", err)
 	}
 
