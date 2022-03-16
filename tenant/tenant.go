@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	common_dapr "github.com/m-to-n/common/dapr"
 	"github.com/m-to-n/common/tenants"
@@ -152,21 +153,23 @@ func GetTenantByAccIdAndPhoneNum(ctx context.Context, tenantReq *tenants.TenantC
 
 	fmt.Printf("http response: %s Body: %s", resp.Status, responseString)
 
-	if resp.StatusCode != 200 {
-		log.Printf("Error http status code received: %s", resp.StatusCode)
-	}
-
 	if resp.StatusCode == 204 {
 		log.Printf("No tenant config found: %s", resp.StatusCode)
 		return nil, nil
 	}
 
-	var tenantConfig tenants.TenantConfig
-	if err := json.Unmarshal(responseData, &tenantConfig); err != nil {
+	if resp.StatusCode != 200 {
+		errMsg := fmt.Sprintf("Error http status code received: %s", resp.StatusCode)
+		log.Println(errMsg)
+		return nil, errors.New(errMsg)
+	}
+
+	var tenantConfigResult tenants.TenantConfigDaprQueryResult
+	if err := json.Unmarshal(responseData, &tenantConfigResult); err != nil {
 		return nil, err
 	}
 
-	return &tenantConfig, nil
+	return &tenantConfigResult.Results[0].Data, nil
 
 }
 

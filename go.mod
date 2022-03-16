@@ -7,7 +7,7 @@ require (
 	github.com/dapr/go-sdk v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/m-to-n/common v0.0.0-20220315195348-2eb832ff08cc // indirect
+	github.com/m-to-n/common v0.0.0-20220316102320-5e1b374d80d5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
